@@ -22,6 +22,9 @@
 #include <glog/logging.h>
 #include <ucp/api/ucp.h>
 
+#include <ostream>  // needed for glog
+// IWYU pragma: no_include <atomic>
+
 namespace srf::internal::data_plane {
 
 void Callbacks::send(void* request, ucs_status_t status, void* user_data)

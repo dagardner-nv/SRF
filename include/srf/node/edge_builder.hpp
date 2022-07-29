@@ -19,11 +19,13 @@
 
 #include "srf/channel/ingress.hpp"
 #include "srf/node/edge_adapter_registry.hpp"
-#include "srf/node/edge.hpp"
+#include "srf/node/edge.hpp"  // IWYU pragma: keep
 #include "srf/node/edge_properties.hpp"
 #include "srf/node/sink_properties.hpp"
 #include "srf/node/source_properties.hpp"
 #include "srf/utils/type_utils.hpp"
+
+#include <glog/logging.h>
 
 #include <memory>
 #include <sstream>

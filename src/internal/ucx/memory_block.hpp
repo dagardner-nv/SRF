@@ -18,9 +18,10 @@
 #pragma once
 
 #include "internal/memory/memory_block.hpp"
-#include "internal/ucx/context.hpp"
 
-#include <glog/logging.h>
+#include <ucp/api/ucp_def.h>                 // for ucp_mem_h, ucp_mem
+#include <cstddef>                           // for size_t
+#include <string>                            // for string
 
 namespace srf::internal::ucx {
 

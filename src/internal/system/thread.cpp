@@ -30,6 +30,7 @@
 #include <hwloc.h>
 
 #include <cstdint>
+#include <sstream>  // for logging and SRF_CONCAT_STR
 #include <type_traits>
 
 namespace srf::internal::system {
