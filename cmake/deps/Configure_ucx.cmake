@@ -160,10 +160,10 @@ function(find_and_configure_ucx version)
     add_dependencies(ucx::ucm ucx)
 
     # Combined ucx::ucx target
-    add_library(ucx::ucx INTERFACE IMPORTED)
-    set_target_properties(ucx::ucx PROPERTIES
-      INTERFACE_LINK_LIBRARIES "ucx::uct;ucx::ucp;ucx::ucs;ucx::ucm"
-    )
+    ##add_library(ucx::ucx INTERFACE IMPORTED)
+    #set_target_properties(ucx::ucx PROPERTIES
+    #  INTERFACE_LINK_LIBRARIES "ucx::uct;ucx::ucp;ucx::ucs;ucx::ucm"
+    #)
 
     # Finally, add this to the style check dependencies
     add_dependencies(${PROJECT_NAME}_style_checks ucx-install)
