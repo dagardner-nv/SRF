@@ -64,6 +64,7 @@ target_link_libraries(test_srf_private
   nvrpc-client
   GTest::gtest
   hwloc::hwloc
+  ucx::ucm
   ucx::ucs
   ucx::ucp
   pthread

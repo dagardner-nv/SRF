@@ -82,7 +82,7 @@ function(find_and_configure_ucx version)
       # The io_demo fails to build in out of source builds. So remove that from
       # the Makefile (wish we could just disable all test/examples/apps) as a
       # part of the download command
-      PATCH_COMMAND     git checkout -- . && git apply --whitespace=fix ${PROJECT_SOURCE_DIR}/cmake/deps/patches/ucx.patch
+      #PATCH_COMMAND     git checkout -- . && git apply --whitespace=fix ${PROJECT_SOURCE_DIR}/cmake/deps/patches/ucx.patch
       # Note, we set SED and GREP here since they can be hard coded in the conda libtoolize
       CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env SED=sed GREP=grep <SOURCE_DIR>/autogen.sh
                 COMMAND <SOURCE_DIR>/contrib/configure-release ${COMPILER_SETTINGS} --prefix=${CMAKE_INSTALL_PREFIX} --enable-mt --without-rdmacm --disable-gtest --disable-examples
@@ -92,6 +92,8 @@ function(find_and_configure_ucx version)
                         <INSTALL_DIR>/lib/libucp.a
                         <INSTALL_DIR>/lib/libucs.a
                         <INSTALL_DIR>/lib/libucm.a
+                        <INSTALL_DIR>/lib/libucs_signal.a
+                        <INSTALL_DIR>/lib/ucx/libuct_cma.a
       INSTALL_COMMAND   make DESTDIR=${ucx_DEST_DIR} install
       LOG_CONFIGURE     TRUE
       LOG_BUILD         TRUE
