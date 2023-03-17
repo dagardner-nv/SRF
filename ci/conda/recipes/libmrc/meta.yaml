@@ -60,7 +60,7 @@ requirements:
     - gflags
     - glog
     - gmock 1.10.*
-    - grpc-cpp
+    - grpc-cpp=1.51.1
     - gtest 1.10.*
     - libhwloc 2.5.*
     - libprotobuf
@@ -97,7 +97,7 @@ outputs:
         - flatbuffers 2.0.*
         - gflags
         - glog
-        - grpc-cpp
+        - grpc-cpp=1.51.1
         - libhwloc 2.5.*
         - libprotobuf # Needed for transitive run_exports from grpc-cpp. Does not need a version
         - librmm {{ rapids_version }}
