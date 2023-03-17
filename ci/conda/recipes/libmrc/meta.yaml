@@ -29,7 +29,7 @@ source:
 build:
   number: {{ GIT_DESCRIBE_NUMBER }}
   script_env:
-    - CMAKE_CUDA_ARCHITECTURES=ALL
+    - CMAKE_CUDA_ARCHITECTURES=native
     - MRC_CACHE_DIR
     - PARALLEL_LEVEL
   include_recipe: False
