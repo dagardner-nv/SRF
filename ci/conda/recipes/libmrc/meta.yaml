@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{% set version = environ.get('GIT_VERSION', '0.0.0.dev').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
+{% set version = 23.03.00a-21-g6a88b5c %}
 {% set minor_version = version.split('.')[0] + '.' + version.split('.')[1] %}
 {% set py_version = environ.get('CONDA_PY', '3.8') %}
 {% set cuda_version = '.'.join(environ.get('CUDA', '11.4').split('.')[:2]) %}
