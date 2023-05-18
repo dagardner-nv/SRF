@@ -30,6 +30,8 @@
 #include <rxcpp/rx.hpp>
 
 #include <exception>
+#include <iostream>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -112,6 +114,7 @@ PythonOperator OperatorsProxy::flatten()
                     source.subscribe(
                         sink,
                         [sink](PyHolder data_object) {
+                            std::cerr << "flatten 0 - " << std::this_thread::get_id() << std::endl << std::flush;
                             try
                             {
                                 AcquireGIL gil;
@@ -132,11 +135,15 @@ PythonOperator OperatorsProxy::flatten()
                                     }
                                 }
 
+                                std::cerr << "flatten 1 - " << std::this_thread::get_id() << std::endl << std::flush;
+
                                 if (sink.is_subscribed())
                                 {
                                     // Release the GIL before calling on_next
                                     gil.release();
 
+                                    std::cerr << "flatten 2 - " << std::this_thread::get_id() << std::endl
+                                              << std::flush;
                                     // Loop over the list
                                     for (auto& i : obj_list)
                                     {
@@ -145,6 +152,8 @@ PythonOperator OperatorsProxy::flatten()
                                 }
                             } catch (py::error_already_set& err)
                             {
+                                std::cerr << "flatten error - " << std::this_thread::get_id() << std::endl
+                                          << std::flush;
                                 // Need the GIL here
                                 AcquireGIL gil;
 
@@ -158,11 +167,15 @@ PythonOperator OperatorsProxy::flatten()
                             }
                         },
                         [sink](std::exception_ptr ex) {
+                            std::cerr << "flatten exception_ptr - " << std::this_thread::get_id() << std::endl
+                                      << std::flush;
                             // Forward
                             sink.on_error(std::move(ex));
                         },
                         [sink]() {
                             // Forward
+                            std::cerr << "flatten on_completed - " << std::this_thread::get_id() << std::endl
+                                      << std::flush;
                             sink.on_completed();
                         });
                 });
@@ -194,17 +207,29 @@ PythonOperator OperatorsProxy::on_completed(PyFuncHolder<std::optional<pybind11:
                         },
                         [sink](std::exception_ptr ex) {
                             // Forward
+                            std::cerr << "on_completed exception_ptr - " << std::this_thread::get_id() << std::endl
+                                      << std::flush;
                             sink.on_error(std::move(ex));
                         },
                         [sink, finally_fn]() {
+                            std::cerr << "on_completed on_completed - " << std::this_thread::get_id() << std::endl
+                                      << std::flush;
                             // In finally function, call the wrapped function
                             auto ret_val = finally_fn();
 
                             if (ret_val.has_value() && !ret_val.value().is_none())
                             {
+                                std::cerr << "on_completed on_next - " << std::this_thread::get_id() << std::endl
+                                          << std::flush;
                                 sink.on_next(std::move(ret_val.value()));
+
+                                std::cerr << "on_completed on_next - called " << std::this_thread::get_id() << std::endl
+                                          << std::flush;
                             }
 
+                            std::cerr << "on_completed calling on_completed - " << std::this_thread::get_id()
+                                      << std::endl
+                                      << std::flush;
                             // Call on_completed
                             sink.on_completed();
                         }));
