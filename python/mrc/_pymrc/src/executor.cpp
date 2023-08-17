@@ -228,8 +228,8 @@ Executor::Executor(std::shared_ptr<Options> options)
     auto system = mrc::make_system(options);
 
     // Now add the gil initializers and finalizers
-    system->add_thread_initializer(create_gil_initializer());
-    system->add_thread_finalizer(create_gil_finalizer());
+    // system->add_thread_initializer(create_gil_initializer());
+    // system->add_thread_finalizer(create_gil_finalizer());
 
     // Must release the GIL while we create the executor
     pybind11::gil_scoped_release nogil;
