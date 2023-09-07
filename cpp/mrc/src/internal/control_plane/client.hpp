@@ -80,14 +80,8 @@ class AsyncEventStatus
     template <typename ResponseT>
     Expected<ResponseT> await_response()
     {
-        if (!m_future.valid())
-        {
-            throw exceptions::MrcRuntimeError(
-                "This AsyncEventStatus is not expecting a response or the response has already been awaited");
-        }
-
-        auto event = m_future.get();
-
+        CHECK(m_promise != nullptr) << "Promise is null";
+        auto event = m_promise->get_future().get();
         if (event.has_error())
         {
             return Error::create(event.error().message());
@@ -105,15 +99,15 @@ class AsyncEventStatus
   private:
     AsyncEventStatus() : m_request_id(++s_request_id_counter) {}
 
-    void set_future(Future<protos::Event> future)
+    void set_promise(std::shared_ptr<Promise<protos::Event>> promise)
     {
-        m_future = std::move(future);
+        m_promise = std::move(promise);
     }
 
     static std::atomic_uint64_t s_request_id_counter;
 
-    size_t m_request_id;
-    Future<protos::Event> m_future;
+    uint64_t m_request_id;
+    std::shared_ptr<Promise<protos::Event>> m_promise = nullptr;
 
     friend class Client;
 };
@@ -251,7 +245,7 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     std::mutex m_mutex;
 
-    std::map<size_t, Promise<protos::Event>> m_pending_events;
+    std::map<uint64_t, std::shared_ptr<Promise<protos::Event>>> m_pending_events;
 
     friend network::NetworkResources;
 };

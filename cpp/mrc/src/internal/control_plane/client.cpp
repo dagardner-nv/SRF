@@ -180,7 +180,7 @@ void Client::do_handle_event(event_t&& event)
             lock.unlock();
 
             // Finally, set the value
-            promise.mapped().set_value(std::move(event.msg));
+            promise.mapped()->set_value(std::move(event.msg));
         }
     }
     break;
@@ -291,10 +291,10 @@ AsyncEventStatus Client::write_event(protos::Event event, bool await_response)
     if (await_response)
     {
         // If we are supporting awaiting, create the promise now
-        Promise<protos::Event> promise;
+        auto promise = std::make_shared<Promise<protos::Event>>();
 
         // Set the future to the status
-        status.set_future(promise.get_future());
+        status.set_promise(promise);
 
         // Set the tag to the request ID to allow looking up the promise later
         event.set_tag(status.request_id());
