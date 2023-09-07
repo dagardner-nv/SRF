@@ -164,16 +164,14 @@ class Client final : public resources::PartitionResourceBase, public Service
     template <typename ResponseT>
     void add_promise(AsyncStatus<ResponseT>& status)
     {
-        auto p          = std::make_unique<Promise<protos::Event>>();
-        auto* pp        = p.get();
-        const auto addr = reinterpret_cast<std::uint64_t>(pp);
+        auto p           = std::make_shared<Promise<protos::Event>>();
+        status.m_promise = p;
+        const auto addr  = reinterpret_cast<std::uint64_t>(p.get());
         LOG(INFO) << "Adding promise " << addr << "\t" << std::hex << addr;
         {
             std::lock_guard<decltype(m_mutex)> lock(m_mutex);
             m_promises.insert({addr, std::move(p)});
         }
-
-        status.m_promise = pp;
     }
 
     State m_state{State::Disconnected};
@@ -215,7 +213,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     mrc::runnable::LaunchOptions m_launch_options;
 
     std::mutex m_mutex;
-    std::map<std::uint64_t, std::unique_ptr<Promise<protos::Event>>> m_promises;
+    std::map<std::uint64_t, std::shared_ptr<Promise<protos::Event>>> m_promises;
 
     friend network::NetworkResources;
 };
@@ -267,7 +265,7 @@ class AsyncStatus
     }
 
   private:
-    Promise<protos::Event>* m_promise = nullptr;
+    std::shared_ptr<Promise<protos::Event>> m_promise = nullptr;
     friend Client;
 };
 
@@ -285,7 +283,7 @@ void Client::async_unary(const protos::EventType& event_type, RequestT&& request
 {
     protos::Event event;
     event.set_event(event_type);
-    event.set_tag(reinterpret_cast<std::uint64_t>(status.m_promise));
+    event.set_tag(reinterpret_cast<std::uint64_t>(status.m_promise.get()));
     CHECK(event.mutable_message()->PackFrom(request));
     m_writer->await_write(std::move(event));
 }
