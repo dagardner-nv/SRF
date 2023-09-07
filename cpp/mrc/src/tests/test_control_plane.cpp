@@ -100,26 +100,33 @@ TEST_F(TestControlPlane, LifeCycle)
 
 TEST_F(TestControlPlane, SingleClientConnectDisconnect)
 {
+    // LOG(INFO) << "1";
     auto sr     = make_runtime();
     auto server = std::make_unique<control_plane::Server>(sr->partition(0).resources().runnable());
 
     server->service_start();
     server->service_await_live();
 
+    // LOG(INFO) << "2";
     auto cr = make_runtime([](Options& options) {
         options.architect_url("localhost:13337");
+        // LOG(INFO) << "\t2.1";
     });
 
+    // LOG(INFO) << "3";
     // the total number of partition is system dependent
     auto expected_partitions = cr->resources().system().partitions().flattened().size();
     EXPECT_EQ(cr->partition(0).resources().network()->control_plane().client().connections().instance_ids().size(),
               expected_partitions);
 
+    // LOG(INFO) << "4";
     // destroying the resources should gracefully shutdown the data plane and the control plane.
     cr.reset();
 
+    // LOG(INFO) << "5";
     server->service_stop();
     server->service_await_join();
+    // LOG(INFO) << "6";
 }
 
 TEST_F(TestControlPlane, DoubleClientConnectExchangeDisconnect)
@@ -245,17 +252,17 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
         })
         .get();
 
-    LOG(INFO) << "MAKE PUBLISHER";
+    // LOG(INFO) << "MAKE PUBLISHER";
     auto publisher = Publisher<int>::create("my_int", PublisherPolicy::RoundRobin, client_1->partition(0));
-    LOG(INFO) << "PUBLISHER START";
+    // LOG(INFO) << "PUBLISHER START";
     publisher->await_start();
-    LOG(INFO) << "PUBLISHER STARTED";
+    // LOG(INFO) << "PUBLISHER STARTED";
 
-    LOG(INFO) << "MAKE SUBSCRIBER";
+    // LOG(INFO) << "MAKE SUBSCRIBER";
     auto subscriber = Subscriber<int>::create("my_int", client_2->partition(0));
-    LOG(INFO) << "SUBSCRIBER START";
+    // LOG(INFO) << "SUBSCRIBER START";
     subscriber->await_start();
-    LOG(INFO) << "SUBSCRIBER STARTED";
+    // LOG(INFO) << "SUBSCRIBER STARTED";
 
     client_1->partition(0).resources().network()->control_plane().client().request_update();
 
@@ -263,23 +270,23 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
     publisher->await_write(15);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
+    // LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
     // client-side: publisher manager should have 1 tagged instance in it write list
     // server-side: publisher member list: 1, subscriber member list: 1, subscriber subscribe_to list: 1
 
-    LOG(INFO) << "[START] DELETE SUBSCRIBER";
+    // LOG(INFO) << "[START] DELETE SUBSCRIBER";
     subscriber->request_stop();
     subscriber->await_join();
-    LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
+    // LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
     client_1->partition(0).resources().network()->control_plane().client().request_update();
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
+    // LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
-    LOG(INFO) << "[START] DELETE PUBLISHER";
+    // LOG(INFO) << "[START] DELETE PUBLISHER";
     publisher->request_stop();
     publisher->await_join();
-    LOG(INFO) << "[FINISH] DELETE PUBLISHER";
+    // LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
     client_1->partition(0).resources().network()->control_plane().client().request_update();
 
@@ -353,11 +360,11 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 //         })
 //         .get();
 
-//     LOG(INFO) << "MAKE PUBLISHER";
+//     // LOG(INFO) << "MAKE PUBLISHER";
 //     auto publisher =
 //         client_1->partition(0).make_publisher<mrc::memory::buffer>("my_buffer", pubsub::PublisherPolicy::Broadcast);
 
-//     LOG(INFO) << "MAKE SUBSCRIBER";
+//     // LOG(INFO) << "MAKE SUBSCRIBER";
 //     auto subscriber = client_2->partition(0).make_subscriber<mrc::memory::buffer>("my_buffer");
 
 //     client_1->partition(0).resources().network()->control_plane().client().request_update();
@@ -369,21 +376,21 @@ TEST_F(TestControlPlane, DoubleClientPubSub)
 //     publisher->await_write(std::move(buffer_2));
 
 //     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-//     LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
+//     // LOG(INFO) << "AFTER SLEEP 1 - publisher should have 1 subscriber";
 //     // client-side: publisher manager should have 1 tagged instance in it write list
 //     // server-side: publisher member list: 1, subscriber member list: 1, subscriber subscribe_to list: 1
 
-//     LOG(INFO) << "[START] DELETE SUBSCRIBER";
+//     // LOG(INFO) << "[START] DELETE SUBSCRIBER";
 //     subscriber.reset();
-//     LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
+//     // LOG(INFO) << "[FINISH] DELETE SUBSCRIBER";
 
 //     client_1->partition(0).resources().network()->control_plane().client().request_update();
 //     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-//     LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
+//     // LOG(INFO) << "AFTER SLEEP 2 - publisher should have 0 subscribers";
 
-//     LOG(INFO) << "[START] DELETE PUBLISHER";
+//     // LOG(INFO) << "[START] DELETE PUBLISHER";
 //     publisher.reset();
-//     LOG(INFO) << "[FINISH] DELETE PUBLISHER";
+//     // LOG(INFO) << "[FINISH] DELETE PUBLISHER";
 
 //     client_1->partition(0).resources().network()->control_plane().client().request_update();
 

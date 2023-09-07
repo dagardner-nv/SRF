@@ -161,6 +161,21 @@ class Client final : public resources::PartitionResourceBase, public Service
 
     void forward_state(State state);
 
+    template <typename ResponseT>
+    void add_promise(AsyncStatus<ResponseT>& status)
+    {
+        auto p          = std::make_unique<Promise<protos::Event>>();
+        auto* pp        = p.get();
+        const auto addr = reinterpret_cast<std::uint64_t>(pp);
+        LOG(INFO) << "Adding promise " << addr << "\t" << std::hex << addr;
+        {
+            std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+            m_promises.insert({addr, std::move(p)});
+        }
+
+        status.m_promise = pp;
+    }
+
     State m_state{State::Disconnected};
 
     // MachineID m_machine_id;
@@ -200,6 +215,7 @@ class Client final : public resources::PartitionResourceBase, public Service
     mrc::runnable::LaunchOptions m_launch_options;
 
     std::mutex m_mutex;
+    std::map<std::uint64_t, std::unique_ptr<Promise<protos::Event>>> m_promises;
 
     friend network::NetworkResources;
 };
@@ -211,32 +227,47 @@ template <typename ResponseT>
 class AsyncStatus
 {
   public:
-    AsyncStatus() = default;
+    AsyncStatus()
+    {
+        LOG(INFO) << "\n\n";
+        LOG(INFO) << "AsyncStatus(): this=" << this;
+    };
+
+    ~AsyncStatus()
+    {
+        LOG(INFO) << "~AsyncStatus(): this=" << this << "promise=" << &m_promise << "\n\n";
+    };
 
     DELETE_COPYABILITY(AsyncStatus);
     DELETE_MOVEABILITY(AsyncStatus);
 
     Expected<ResponseT> await_response()
     {
+        DCHECK(m_promise != nullptr) << "promise is null";
         // todo(ryan): expand this into a wait_until with a deadline and a stop token
-        auto event = m_promise.get_future().get();
+        LOG(INFO) << "await_response(): this=" << this << " promise=" << &m_promise;
+        auto event = m_promise->get_future().get();
 
         if (event.has_error())
         {
+            LOG(INFO) << "await_response() error: this=" << this << " promise=" << &m_promise << "\t"
+                      << event.error().message();
             return Error::create(event.error().message());
         }
 
         ResponseT response;
         if (!event.message().UnpackTo(&response))
         {
+            LOG(INFO) << "await_response() error: this=" << this << " promise=" << &m_promise << "\tfailed to unpack";
             throw Error::create("fatal error: unable to unpack message; server sent the wrong message type");
         }
 
+        LOG(INFO) << "await_response() done: this=" << this << " promise=" << &m_promise;
         return response;
     }
 
   private:
-    Promise<protos::Event> m_promise;
+    Promise<protos::Event>* m_promise = nullptr;
     friend Client;
 };
 
@@ -244,6 +275,7 @@ template <typename ResponseT, typename RequestT>
 Expected<ResponseT> Client::await_unary(const protos::EventType& event_type, RequestT&& request)
 {
     AsyncStatus<ResponseT> status;
+    add_promise(status);
     async_unary(event_type, std::move(request), status);
     return status.await_response();
 }
@@ -253,7 +285,7 @@ void Client::async_unary(const protos::EventType& event_type, RequestT&& request
 {
     protos::Event event;
     event.set_event(event_type);
-    event.set_tag(reinterpret_cast<std::uint64_t>(&status.m_promise));
+    event.set_tag(reinterpret_cast<std::uint64_t>(status.m_promise));
     CHECK(event.mutable_message()->PackFrom(request));
     m_writer->await_write(std::move(event));
 }

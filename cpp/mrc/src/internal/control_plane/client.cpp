@@ -161,15 +161,34 @@ void Client::do_handle_event(event_t&& event)
         // handle a subset of events directly on the event handler
 
     case protos::EventType::Response: {
-        auto* promise = reinterpret_cast<Promise<protos::Event>*>(event.msg.tag());
-        if (promise != nullptr)
+        LOG(INFO) << "event handler - Response : " << event.msg.has_message() << " : " << event.msg.has_error();
+        if (event.msg.has_message())
         {
-            promise->set_value(event.msg);
+            const auto addr = event.msg.tag();
+            LOG(INFO) << "event handler - Response: addr=" << std::hex << addr;
+            {
+                std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+
+                auto itr = m_promises.find(addr);
+
+                if (itr != m_promises.end())
+                {
+                    LOG(INFO) << "event handler - Response: set_value";
+                    itr->second->set_value(std::move(event.msg));
+                    LOG(INFO) << "event handler - Response: done";
+                    m_promises.erase(itr);
+                }
+                else
+                {
+                    LOG(WARNING) << "event handler - Response: null or invalid";
+                }
+            }
         }
     }
     break;
 
     case protos::EventType::ServerStateUpdate: {
+        LOG(INFO) << "event handler - ServerStateUpdate";
         protos::StateUpdate update;
         CHECK(event.msg.has_message() && event.msg.message().UnpackTo(&update));
 
