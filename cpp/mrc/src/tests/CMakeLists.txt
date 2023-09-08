@@ -88,3 +88,24 @@ add_test(
   NAME test_mrc_private
   COMMAND $<TARGET_FILE:test_mrc_private>
 )
+
+add_executable(test_cp
+  common.cpp
+  cp_test.cpp
+)
+
+target_link_libraries(test_cp
+  PRIVATE
+  ${PROJECT_NAME}::libmrc
+  hwloc::hwloc
+  ucx::ucs
+  ucx::ucp
+  pthread
+  mrc_test_protos
+)
+
+target_include_directories(test_cp
+  PRIVATE
+  ${MRC_ROOT_DIR}/cpp/mrc/src
+  copy_fixture_files
+)
