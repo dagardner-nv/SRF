@@ -32,6 +32,7 @@
 #include "internal/system/system_provider.hpp"
 
 #include "mrc/codable/fundamental_types.hpp"  // IWYU pragma: keep
+#include "mrc/core/logging.hpp"
 #include "mrc/core/task_queue.hpp"
 #include "mrc/core/userspace_threads.hpp"
 #include "mrc/memory/literals.hpp"
@@ -105,6 +106,7 @@ void single_client_connect_disconnect()
 
 int main(int argc, char** argv)
 {
+    mrc::init_logging("mrc::test_mrc_private");
     std::cout << "Promise<bool> : " << sizeof(Promise<bool>) << std::endl;
     std::cout << "Promise<bool>* : " << sizeof(Promise<bool>*) << std::endl;
 

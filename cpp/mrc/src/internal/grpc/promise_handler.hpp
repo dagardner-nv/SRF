@@ -37,8 +37,8 @@ class PromiseHandler final : public mrc::node::GenericSinkComponent<ProgressEven
         auto* promise = static_cast<boost::fibers::promise<bool>*>(event.tag);
         promise->set_value(event.ok);
         event.tag = nullptr;
+        LOG(INFO) << "Delete: " << promise;
         delete promise;
-        LOG(INFO) << "PromiseHandler: " << event.ok;
         return mrc::channel::Status::success;
     };
 

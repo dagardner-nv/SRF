@@ -196,7 +196,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         {
             CHECK(m_stream);
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             IncomingData data;
             m_stream->Read(&data.msg, promise);
             auto ok = future.get();
@@ -218,7 +219,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         if (m_can_write)
         {
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             m_stream->Write(request, promise);
             auto ok = future.get();
             if (!ok)
@@ -237,7 +239,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
         if (m_can_write)
         {
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             m_stream->WritesDone(promise);
             future.get();
             DVLOG(10) << "client issued writes done to server";
@@ -288,7 +291,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
 
         DVLOG(10) << "starting grpc bidi client stream";
         auto* promise = new Promise<bool>;
-        auto future   = promise->get_future();
+        LOG(INFO) << "Create: " << promise;
+        auto future = promise->get_future();
         m_stream->StartCall(promise);
         auto ok = future.get();
 
@@ -333,7 +337,8 @@ class ClientStream : private Service, public std::enable_shared_from_this<Client
             m_reader->await_join();
 
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             m_stream->Finish(&m_status, promise);
             auto ok = future.get();
         }

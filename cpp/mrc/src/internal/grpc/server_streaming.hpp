@@ -224,7 +224,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         {
             CHECK(m_stream);
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             IncomingData data;
             m_stream->Read(&data.msg, promise);
             auto ok     = future.get();
@@ -249,7 +250,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
         if (m_can_write)
         {
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             m_stream->Write(request, promise);
             auto ok = future.get();
             if (!ok)
@@ -275,7 +277,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
 
             DVLOG(10) << "server issuing finish";
             auto* promise = new Promise<bool>;
-            auto future   = promise->get_future();
+            LOG(INFO) << "Create: " << promise;
+            auto future = promise->get_future();
             m_stream->Finish(*m_status, promise);
             auto ok = future.get();
             DVLOG(10) << "server done with finish";
@@ -321,7 +324,8 @@ class ServerStream : private Service, public std::enable_shared_from_this<Server
     void do_service_start() final
     {
         auto* promise = new Promise<bool>;
-        auto future   = promise->get_future();
+        LOG(INFO) << "Create: " << promise;
+        auto future = promise->get_future();
         m_init_fn(promise);
         auto ok = future.get();
 
