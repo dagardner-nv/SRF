@@ -280,7 +280,7 @@ void BuilderDefinition::initialize()
         m_definition->initializer_fn()(*this);
     } catch (const std::exception& e)
     {
-        LOG(ERROR) << "Exception during segment initializer. Segment name: " << m_definition->name()
+        LOG(ERROR) << "******** Exception during segment initializer. Segment name: " << m_definition->name()
                    << ", Segment Rank: " << m_rank << ". Exception message:\n"
                    << e.what();
 

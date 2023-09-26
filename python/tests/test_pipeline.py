@@ -484,6 +484,8 @@ def test_segment_init_error():
         executor.start()
         executor.join()
 
+    executor = None
+
 
 if (__name__ in ("__main__", )):
     test_dynamic_port_creation_good()
