@@ -218,6 +218,30 @@ TEST_F(TestSegmentModules, ModuleEndToEndTest)
     EXPECT_EQ(packets_3, 4);
 }
 
+TEST_F(TestSegmentModules, ModuleInitError)
+{
+    using namespace modules;
+
+    auto init_wrapper = [](segment::IBuilder& builder) {
+        VLOG(10) << "***************\nCreating module\n**********" << std::flush << std::endl;
+        auto simple_mod = builder.make_module<SimpleModule>("ModuleEndToEndTest_mod1");
+
+        VLOG(10) << "***************\nThrowing\n**********" << std::flush << std::endl;
+        throw std::runtime_error("Test exception");
+    };
+
+    m_pipeline->make_segment("EndToEnd_Segment", init_wrapper);
+
+    auto options = std::make_shared<Options>();
+    options->topology().user_cpuset("0-1");
+    options->topology().restrict_gpus(true);
+
+    Executor executor(options);
+    executor.register_pipeline(std::move(m_pipeline));
+    executor.start();
+    EXPECT_THROW(executor.join(), std::runtime_error);
+}
+
 TEST_F(TestSegmentModules, ModuleAsSourceTest)
 {
     using namespace modules;

@@ -42,6 +42,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -293,6 +294,7 @@ void BuilderDefinition::initialize()
 void BuilderDefinition::shutdown()
 {
     DVLOG(10) << "Shutting down segment: " << m_definition->name();
+    std::vector<std::shared_ptr<ObjectProperties>> objects_to_destroy;
     for (auto& [name, obj_prop] : m_objects)
     {
         if (obj_prop->is_source() && !obj_prop->is_sink())
@@ -300,11 +302,24 @@ void BuilderDefinition::shutdown()
             DVLOG(10) << "Destroying: " << name;
             obj_prop->destroy();
         }
+        else
+        {
+            objects_to_destroy.push_back(obj_prop);
+        }
     }
 
+    DVLOG(10) << "********** 0 " << m_definition->name();
+    for (auto& obj_prop : objects_to_destroy)
+    {
+        // DVLOG(10) << "Destroying: " << obj_prop->name();
+        // obj_prop->destroy();
+    }
+
+    DVLOG(10) << "************** 1 " << m_definition->name();
     m_ingress_ports.clear();
     m_egress_ports.clear();
     m_nodes.clear();
+    DVLOG(10) << "******** 2 " << m_definition->name();
     m_objects.clear();
 
     DVLOG(10) << "Shutting down segment: " << m_definition->name() << " - done";

@@ -41,32 +41,34 @@ SimpleModule::SimpleModule(std::string module_name, nlohmann::json config) :
 
 void SimpleModule::initialize(segment::IBuilder& builder)
 {
+    DVLOG(10) << "SimpleModule::initialize" << std::endl;
     if (config().contains("simple_key_1"))
     {
         m_was_configured = true;
     }
 
     /** First linear path **/
-    auto input1 = builder.make_node<bool, unsigned int>("input1", rxcpp::operators::map([](bool input) {
-                                                            unsigned int output = 42;
-                                                            return output;
-                                                        }));
+    // auto input1 = builder.make_node<bool, unsigned int>("input1", rxcpp::operators::map([](bool input) {
+    //                                                         unsigned int output = 42;
+    //                                                         return output;
+    //                                                     }));
 
-    auto internal1 = builder.make_node<unsigned int, std::string>("_internal1_",
-                                                                  rxcpp::operators::map([](unsigned int input) {
-                                                                      auto output = std::to_string(input);
-                                                                      VLOG(10) << "Created output1 << " << output
-                                                                               << std::endl;
-                                                                      return output;
-                                                                  }));
+    // auto internal1 = builder.make_node<unsigned int, std::string>("_internal1_",
+    //                                                               rxcpp::operators::map([](unsigned int input) {
+    //                                                                   auto output = std::to_string(input);
+    //                                                                   VLOG(10) << "Created output1 << " << output
+    //                                                                            << std::endl;
+    //                                                                   return output;
+    //                                                               }));
 
-    builder.make_edge(input1, internal1);
+    // builder.make_edge(input1, internal1);
 
-    auto output1 = builder.make_node<std::string, std::string>("output1", rxcpp::operators::map([](std::string input) {
-                                                                   return input;
-                                                               }));
+    // auto output1 = builder.make_node<std::string, std::string>("output1", rxcpp::operators::map([](std::string input)
+    // {
+    //                                                                return input;
+    //                                                            }));
 
-    builder.make_edge(internal1, output1);
+    // builder.make_edge(internal1, output1);
 
     /** Second linear path **/
     auto input2 = builder.make_node<bool, unsigned int>("input2", rxcpp::operators::map([](bool input) {
@@ -90,11 +92,11 @@ void SimpleModule::initialize(segment::IBuilder& builder)
 
     builder.make_edge(internal2, output2);
 
-    register_input_port("input1", input1);
-    register_output_port("output1", output1);
+    // register_input_port("input1", input1);
+    // register_output_port("output1", output1);
 
-    register_input_port("input2", input2);
-    register_output_port("output2", output2);
+    // register_input_port("input2", input2);
+    // register_output_port("output2", output2);
 
     m_initialized = true;
 }
