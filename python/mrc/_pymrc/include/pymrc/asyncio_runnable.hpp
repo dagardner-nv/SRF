@@ -215,7 +215,7 @@ class AsyncioRunnable : public AsyncSink<InputT>,
      * @brief A semaphore used to control the number of outstanding operations. Acquire one before
      * beginning a task, and release it when finished.
      */
-    std::counting_semaphore<1> m_task_tickets{1};
+    std::counting_semaphore<16> m_task_tickets{16};
 };
 
 template <typename InputT, typename OutputT>
@@ -224,7 +224,7 @@ void AsyncioRunnable<InputT, OutputT>::run(mrc::runnable::Context& ctx)
     std::exception_ptr exception;
 
     {
-        std::cerr << "AsyncioRunnable::run() > Acquiring GIL (1)" << std::endl;
+        std::cerr << "AsyncioRunnable::run() > Acquiring GIL (16)" << std::endl;
         py::gil_scoped_acquire gil;
 
         auto asyncio = py::module_::import("asyncio");
