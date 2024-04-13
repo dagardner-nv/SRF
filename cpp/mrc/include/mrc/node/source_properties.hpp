@@ -26,6 +26,8 @@
 #include "mrc/types.hpp"  // for Mutex
 #include "mrc/utils/type_utils.hpp"
 
+#include <cstddef>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -230,6 +232,8 @@ class ForwardingEgressProvider : public ReadableProvider<T>
             std::lock_guard<decltype(m_state->m_mutex)> lock(m_state->m_mutex);
             if (!(m_state->m_is_destroyed))
             {
+                std::fstream fs("/tmp/fep.log", std::ios::out | std::ios::app);
+                fs << "******** ForwardingEgressProvider::ForwardingEdge::await_read\n" << std::endl << std::flush;
                 return m_parent.get_next(t);
             }
 
