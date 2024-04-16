@@ -22,6 +22,7 @@
 #include "mrc/channel/status.hpp"
 #include "mrc/node/generic_source.hpp"
 #include "mrc/pipeline/executor.hpp"
+#include "mrc/segment/component.hpp"
 
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/condition_variable.hpp>
@@ -298,10 +299,9 @@ template <typename TracerTypeT>
 template <bool ForceTracerSequencing>
 decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source_component(const std::string& id)
 {
-    auto idx     = get_or_create_node_entry(id);
-    auto emitted = 0;
+    auto idx = get_or_create_node_entry(id);
 
-    auto tracer_source = [this, idx, &emitted](TracerTypeT& data) {
+    auto tracer_source = [this, idx](TracerTypeT& data) {
         channel::Status status = channel::Status::closed;
         if (is_running())
         {
@@ -340,8 +340,8 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source_component(co
 
             data.max_nodes(m_max_nodes);
 
-            ++emitted;
-            if (emitted < m_count_max)
+            ++m_count;
+            if (m_count < m_count_max)
             {
                 status = channel::Status::success;
             }
@@ -350,7 +350,10 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source_component(co
         return status;
     };
 
-    return std::make_unique<node::LambdaSourceComponent<TracerTypeT>>(tracer_source);
+    auto lambda_src     = std::make_unique<node::LambdaSourceComponent<TracerTypeT>>(tracer_source);
+    auto segment_object = std::make_shared<segment::Component<node::LambdaSourceComponent<TracerTypeT>>>(
+        std::move(lambda_src));
+    return segment_object;
 }
 
 template <typename TracerTypeT>

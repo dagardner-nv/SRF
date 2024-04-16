@@ -265,8 +265,8 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             {
                 std::cerr << "\n*********** LongEmitReceiveFixture - using source component ***********\n"
                           << std::flush << std::endl;
-                auto src = m_watcher->template create_rx_tracer_source_component<OneAtATimeV>(src_name);
-                // last_node = src;
+                auto src  = m_watcher->template create_rx_tracer_source_component<OneAtATimeV>(src_name);
+                last_node = src;
             }
 
             for (auto i = 0; i < InternalNodesV; ++i)
@@ -340,8 +340,16 @@ using latency_tracer_2_t = TracerEnsemble<std::size_t, LatencyTracer>;
 class SegmentLongComponentRawLatency : public LongEmitReceiveFixture<latency_tracer_2_t, true, InternalNodeCount>
 {};
 
+class SegmentLongComponentRawLatencySrcComponent
+  : public LongEmitReceiveFixture<latency_tracer_2_t, true, InternalNodeCount, true>
+{};
+
 using throughput_tracer_2_t = TracerEnsemble<std::size_t, ThroughputTracer>;
 class SegmentLongComponentRawThroughput : public LongEmitReceiveFixture<throughput_tracer_2_t, true, InternalNodeCount>
+{};
+
+class SegmentLongComponentRawThroughputSrcComponent
+  : public LongEmitReceiveFixture<throughput_tracer_2_t, true, InternalNodeCount, true>
 {};
 
 // NOLINTNEXTLINE
@@ -420,6 +428,31 @@ BENCHMARK_F(SegmentLongComponentRawThroughput, long_pipeline_component_throughpu
 
 // NOLINTNEXTLINE
 BENCHMARK_F(SegmentLongComponentRawLatency, long_pipeline_component_latency)(benchmark::State& state)
+{
+    m_watcher->tracer_count(1e4);
+    for (auto _ : state)
+    {
+        m_watcher->reset();
+        m_watcher->trace_until_notified();
+    }
+    add_state_counters(m_watcher->aggregate_tracers(), state);
+}
+
+BENCHMARK_F(SegmentLongComponentRawThroughputSrcComponent, long_pipeline_component_throughput_w_source_component)
+(benchmark::State& state)
+{
+    m_watcher->tracer_count(1e4);
+    for (auto _ : state)
+    {
+        m_watcher->reset();
+        m_watcher->trace_until_notified();
+    }
+    add_state_counters(m_watcher->aggregate_tracers(), state);
+}
+
+// NOLINTNEXTLINE
+BENCHMARK_F(SegmentLongComponentRawLatencySrcComponent, long_pipeline_component_latency_w_source_component)
+(benchmark::State& state)
 {
     m_watcher->tracer_count(1e4);
     for (auto _ : state)
