@@ -265,7 +265,8 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             {
                 std::cerr << "\n*********** LongEmitReceiveFixture - using source component ***********\n"
                           << std::flush << std::endl;
-                auto src  = m_watcher->template create_rx_tracer_source_component<OneAtATimeV>(src_name);
+                auto src = m_watcher->template create_rx_tracer_source_component<OneAtATimeV>(src_name);
+                segment.add_object(src_name, src);
                 last_node = src;
             }
 
