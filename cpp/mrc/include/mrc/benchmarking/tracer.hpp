@@ -53,6 +53,11 @@ class TracerBase
      */
     std::size_t max_nodes() const;
 
+    void max_nodes(std::size_t max_nodes)
+    {
+        m_max_nodes = max_nodes;
+    };
+
     /**
      * @brief Human readable name for the type of tracer
      * @return Tracer name.
@@ -96,7 +101,7 @@ class TracerBase
                          const time_unit_ns_t& elapsed) = 0;
 
   protected:
-    const std::size_t m_max_nodes;
+    std::size_t m_max_nodes;
 };
 
 class LatencyTracer : public TracerBase

@@ -235,7 +235,7 @@ class SimpleEmitReceiveFixture : public benchmark::Fixture
  * used to test the maximum raw throughput of each component.
  * @tparam InternalNodesV Number of internal stages the segment should have add.
  */
-template <class TracerTypeT, bool OneAtATimeV, std::size_t InternalNodesV>
+template <class TracerTypeT, bool OneAtATimeV, std::size_t InternalNodesV, bool UseComponentSource = false>
 class LongEmitReceiveFixture : public benchmark::Fixture
 {
   public:
@@ -244,16 +244,30 @@ class LongEmitReceiveFixture : public benchmark::Fixture
 
     void SetUp(const ::benchmark::State& state) override
     {
+        std::cerr << "\n*********** LongEmitReceiveFixture::SetUp ***********\n" << std::flush << std::endl;
         TimeUtil::estimate_steady_clock_delay();
         auto init = [this](segment::IBuilder& segment) {
             std::string src_name  = "nsrc";
             std::string sink_name = "nsink";
 
-            auto src = segment.make_source<data_type_t>(
-                src_name,
-                m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
+            std::shared_ptr<segment::ObjectProperties> last_node;
+            if (!UseComponentSource)
+            {
+                std::cerr << "\n*********** LongEmitReceiveFixture - using regular source ***********\n"
+                          << std::flush << std::endl;
+                auto src = segment.make_source<data_type_t>(
+                    src_name,
+                    m_watcher->template create_rx_tracer_source<OneAtATimeV>(src_name));
 
-            std::shared_ptr<segment::ObjectProperties> last_node = src;
+                last_node = src;
+            }
+            else
+            {
+                std::cerr << "\n*********** LongEmitReceiveFixture - using source component ***********\n"
+                          << std::flush << std::endl;
+                auto src = m_watcher->template create_rx_tracer_source_component<OneAtATimeV>(src_name);
+                // last_node = src;
+            }
 
             for (auto i = 0; i < InternalNodesV; ++i)
             {
@@ -262,7 +276,9 @@ class LongEmitReceiveFixture : public benchmark::Fixture
                 auto internal     = segment.make_node<data_type_t, data_type_t>(
                     int_name,
                     m_watcher->create_tracer_receive_tap(int_name),
-                    rxcpp::operators::map([](data_type_t tracer) {
+                    rxcpp::operators::map([int_name](data_type_t tracer) {
+                        // std::cerr << "\n*********** LongEmitReceiveFixture - " << int_name << " ***********\n"
+                        //           << std::flush << std::endl;
                         return tracer;
                     }),
                     m_watcher->create_tracer_emit_tap(int_name));
@@ -274,7 +290,10 @@ class LongEmitReceiveFixture : public benchmark::Fixture
             auto sink_idx = m_watcher->get_or_create_node_entry(sink_name);
             auto sink     = segment.make_sink<data_type_t>(
                 sink_name,
-                m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {}));
+                m_watcher->create_tracer_sink_lambda(sink_name, [](tracer_type_t& data) {
+                    // std::cerr << "\n*********** LongEmitReceiveFixture - sink ***********\n" << std::flush <<
+                    // std::endl;
+                }));
 
             segment.make_edge(last_node, sink);
         };
@@ -290,6 +309,7 @@ class LongEmitReceiveFixture : public benchmark::Fixture
 
     void TearDown(const ::benchmark::State& state) override
     {
+        std::cerr << "\n*********** LongEmitReceiveFixture::TearDown ***********\n" << std::flush << std::endl;
         m_watcher->shutdown();
     }
 

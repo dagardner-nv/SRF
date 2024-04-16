@@ -19,6 +19,8 @@
 
 #include "mrc/benchmarking/trace_statistics.hpp"
 #include "mrc/benchmarking/tracer.hpp"
+#include "mrc/channel/status.hpp"
+#include "mrc/node/generic_source.hpp"
 #include "mrc/pipeline/executor.hpp"
 
 #include <boost/fiber/barrier.hpp>
@@ -65,6 +67,9 @@ class SegmentWatcher
 
     template <bool ForceTracerSequencing = false>
     decltype(auto) create_rx_tracer_source(const std::string& id);
+
+    template <bool ForceTracerSequencing = false>
+    decltype(auto) create_rx_tracer_source_component(const std::string& id);
 
     /**
      * @brief Initialize the watcher, ensures that the segment is running and that the watcher state is
@@ -287,6 +292,65 @@ decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source(const std::s
     };
 
     return tracer_source;
+}
+
+template <typename TracerTypeT>
+template <bool ForceTracerSequencing>
+decltype(auto) SegmentWatcher<TracerTypeT>::create_rx_tracer_source_component(const std::string& id)
+{
+    auto idx     = get_or_create_node_entry(id);
+    auto emitted = 0;
+
+    auto tracer_source = [this, idx, &emitted](TracerTypeT& data) {
+        channel::Status status = channel::Status::closed;
+        if (is_running())
+        {
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                // If we're not currently tracing, then we need to wait for the signal to start.
+                if (!tracing())
+                {
+                    VLOG(5) << "Entering test cycle, sleeping until notified." << std::endl;
+
+                    m_cond_wake.wait(lock);
+                }
+
+                // Make sure we're still running, if not, exit.
+                if (!is_running())
+                {
+                    VLOG(5) << "Shutdown initiated while waiting for test cycle. Exiting." << std::endl;
+                    return mrc::channel::Status::error;
+                }
+            }
+
+            VLOG(5) << "Waking and starting test cycle." << std::endl;
+            m_latency_cycle_ready = true;
+
+            if constexpr (ForceTracerSequencing)
+            {
+                while (!m_latency_cycle_ready && is_running())
+                {
+                    // The current tracer object is still in flight. Wait till it's done.
+                    // TODO (Devin): We don't have to use fibers. Should update this to reflect whatever
+                    //  the runnable context is.
+                    boost::this_fiber::yield();
+                }
+                m_latency_cycle_ready = false;
+            }
+
+            data.max_nodes(m_max_nodes);
+
+            ++emitted;
+            if (emitted < m_count_max)
+            {
+                status = channel::Status::success;
+            }
+        }
+
+        return status;
+    };
+
+    return std::make_unique<node::LambdaSourceComponent<TracerTypeT>>(tracer_source);
 }
 
 template <typename TracerTypeT>
