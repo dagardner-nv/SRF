@@ -246,7 +246,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
 
         subscriber.on_completed();
 
-        LOG(10) << ctx.info() << " Source complete";
+        LOG(INFO) << ctx.info() << " Source complete";
     };
 
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
