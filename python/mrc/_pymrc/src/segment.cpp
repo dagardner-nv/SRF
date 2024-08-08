@@ -224,7 +224,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
 
         try
         {
-            DVLOG(10) << ctx.info() << " Starting source";
+            LOG(INFO) << ctx.info() << " Starting source";
 
             for (auto next_val : iter_wrapper)
             {
@@ -246,7 +246,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
 
         subscriber.on_completed();
 
-        DVLOG(10) << ctx.info() << " Source complete";
+        LOG(10) << ctx.info() << " Source complete";
     };
 
     return self.construct_object<PythonSource<PyHolder>>(name, wrapper);
