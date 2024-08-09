@@ -231,6 +231,7 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
                 //  Only send if its subscribed. Very important to ensure the object has been moved!
                 if (subscriber.is_subscribed())
                 {
+                    LOG(INFO) << ctx.info() << " Source sucsbscribed. Sending value";
                     subscriber.on_next(std::move(next_val));
                 }
                 else
@@ -248,6 +249,8 @@ std::shared_ptr<mrc::segment::ObjectProperties> build_source(mrc::segment::IBuil
             subscriber.on_error(std::current_exception());
             return;
         }
+
+        LOG(INFO) << ctx.info() << " calling on_completed";
 
         subscriber.on_completed();
 
