@@ -101,6 +101,7 @@ void Manager::do_service_await_live()
 
 void Manager::do_service_stop()
 {
+    DVLOG(1) << "Manager::do_service_stop";
     VLOG(10) << "stop: closing update channels";
     m_update_channel->await_write({ControlMessageType::Stop});
 }

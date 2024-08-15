@@ -146,6 +146,7 @@ void Service::service_await_live()
 
 void Service::service_stop()
 {
+    DVLOG(1) << this->debug_prefix() << " service_stop - 0";
     std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
     if (this->is_service_startable())
@@ -154,12 +155,16 @@ void Service::service_stop()
                                                                                  "stopping"));
     }
 
+    DVLOG(1) << this->debug_prefix() << " service_stop - 1";
     // Ensure we are at least in the stopping state. If so, execute the stop call
     if (this->ensure_state(ServiceState::Stopping))
     {
+        DVLOG(1) << this->debug_prefix() << " service_stop - 2";
         lock.unlock();
 
+        DVLOG(1) << this->debug_prefix() << " service_stop - 3";
         this->do_service_stop();
+        DVLOG(1) << this->debug_prefix() << " service_stop - 4";
     }
 }
 

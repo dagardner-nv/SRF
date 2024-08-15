@@ -172,14 +172,33 @@ void Runner::await_join() const
     DVLOG(1) << "Runner::await_join - 0 ";
     std::exception_ptr first_exception{nullptr};
     std::size_t instance_num = 0;
-    for (const auto& instance : instances())
+    for (const auto& instance : m_instances)
     {
         try
         {
             DVLOG(1) << "Runner::await_join - 1 instance[" << instance_num
                      << "] state: " << runnable_state_str(instance.m_state);
             instance_num++;
-            instance.join_future().get();
+            bool completed = false;
+            while (!completed)
+            {
+                if (instance.join_future().wait_for(std::chrono::milliseconds(100)) ==
+                    boost::fibers::future_status::ready)
+                {
+                    completed = true;
+                }
+                else if (instance.m_state > State::Running)
+                {
+                    LOG(ERROR) << "Runner::await_join - instance[" << instance_num - 1
+                               << "] state: " << runnable_state_str(instance.m_state);
+                    throw exceptions::MrcRuntimeError("Runner::await_join - instance state is not Running");
+                }
+                else
+                {
+                    DVLOG(1) << "Runner::await_join - instance[" << instance_num - 1
+                             << "] state: " << runnable_state_str(instance.m_state);
+                }
+            }
             DVLOG(1) << "Runner::await_join - 2 instance[" << instance_num - 1
                      << "] state: " << runnable_state_str(instance.m_state);
         } catch (...)
@@ -191,11 +210,24 @@ void Runner::await_join() const
         }
     }
     DVLOG(1) << "Runner::await_join - 3";
-    m_instances.clear();
+    try
+    {
+        m_instances.clear();
+    } catch (...)
+    {
+        LOG(ERROR) << "Runner::await_join - failed to clear instances";
+        if (first_exception == nullptr)
+        {
+            first_exception = std::current_exception();
+        }
+    }
+    DVLOG(1) << "Runner::await_join - 3.5";
     if (first_exception)
     {
+        DVLOG(1) << "Runner::await_join - 3.6";
         LOG(ERROR) << "Runner::await_join - an exception was caught while awaiting on one or more contexts/instances - "
                       "rethrowing";
+        DVLOG(1) << "Runner::await_join - 3.7";
         std::rethrow_exception(std::move(first_exception));
     }
 
@@ -210,8 +242,24 @@ void Runner::stop() const
 
 void Runner::kill() const
 {
+    DVLOG(1) << "Runner::kill - 0";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    DVLOG(1) << "Runner::kill - 1";
     m_runnable->update_state(Runnable::State::Kill);
+    DVLOG(1) << "Runner::kill - 2";
+    for (auto& instance : m_instances)
+    {
+        DVLOG(1) << "Runner::kill - 3 - instance valid future - " << instance.m_join_future.valid()
+                 << " - context has exception " << instance.m_context->has_exception();
+        if (instance.m_join_future.valid() && !instance.m_context->has_exception())
+        {
+            DVLOG(1) << "Runner::kill - 3.1";
+            instance.m_state = State::Error;
+            // instance.m_context->set_exception(std::make_exception_ptr(exceptions::MrcRuntimeError("Runner::kill")));
+            DVLOG(1) << "Runner::kill - 3.2";
+        }
+    }
+    DVLOG(1) << "Runner::kill - 4";
 }
 
 void Runner::update_state(std::size_t launcher_id, State new_state)
@@ -254,6 +302,15 @@ SharedFuture<void> Runner::Instance::live_future() const
 SharedFuture<void> Runner::Instance::join_future() const
 {
     return m_join_future;
+}
+
+Runner::Instance::~Instance()
+{
+    DVLOG(1) << "Instance::~Instance - 0";
+    m_context.reset();
+    DVLOG(1) << "Instance::~Instance - 1";
+    m_engine.reset();
+    DVLOG(1) << "Instance::~Instance - 2";
 }
 
 void Runner::on_instance_state_change_callback(on_instance_state_change_t callback)

@@ -34,6 +34,7 @@ FiberEngine::FiberEngine(core::FiberTaskQueue& task_queue, const FiberMetaData& 
 
 Future<void> FiberEngine::do_launch_task(std::function<void()> task)
 {
+    DVLOG(1) << "Launching task on fiber engine";
     return m_task_queue.enqueue(m_meta, std::move(task));
 }
 

@@ -146,6 +146,9 @@ class Runner
     class Instance
     {
       public:
+        Instance()                 = default;
+        Instance(Instance&& other) = default;
+        ~Instance();
         std::size_t uid() const;
         State state() const;
         SharedFuture<void> live_future() const;

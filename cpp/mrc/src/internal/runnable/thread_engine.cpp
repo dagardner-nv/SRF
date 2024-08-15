@@ -25,6 +25,7 @@
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/packaged_task.hpp>
+#include <glog/logging.h>
 
 #include <optional>
 #include <utility>
@@ -36,7 +37,12 @@ ThreadEngine::ThreadEngine(CpuSet cpu_set, const system::ThreadingResources& sys
   m_system(system)
 {}
 
-ThreadEngine::~ThreadEngine() = default;
+ThreadEngine::~ThreadEngine()
+{
+    DVLOG(1) << "~ThreadEngine - 0";
+    m_thread.reset();
+    DVLOG(1) << "~ThreadEngine - 1";
+};
 
 std::optional<std::thread::id> ThreadEngine::get_id() const
 {
@@ -49,6 +55,7 @@ std::optional<std::thread::id> ThreadEngine::get_id() const
 
 Future<void> ThreadEngine::do_launch_task(std::function<void()> task)
 {
+    DVLOG(1) << "Launching task on thread engine";
     boost::fibers::packaged_task<void()> pkg_task(std::move(task));
     auto future = pkg_task.get_future();
     m_thread = std::make_unique<system::Thread>(m_system.make_thread("thread_engine", m_cpu_set, std::move(pkg_task)));

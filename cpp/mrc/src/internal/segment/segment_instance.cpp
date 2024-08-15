@@ -187,44 +187,44 @@ void SegmentInstance::do_service_start()
 
 void SegmentInstance::do_service_stop()
 {
-    DVLOG(10) << info() << " issuing stop request";
+    DVLOG(1) << info() << " issuing stop request";
 
     // we do not issue stop for port since they are nodes and stop has no effect
 
     for (const auto& [name, runner] : m_runners)
     {
-        DVLOG(10) << info() << " issuing stop for node " << name;
+        DVLOG(1) << info() << " issuing stop for node " << name;
         runner->stop();
     }
 
     change_stage(State::Stop);
-    DVLOG(10) << info() << " stop has been initiated; use the is_completed future to await on shutdown";
+    DVLOG(1) << info() << " stop has been initiated; use the is_completed future to await on shutdown";
 }
 
 void SegmentInstance::do_service_kill()
 {
-    DVLOG(10) << info() << " issuing kill request";
+    DVLOG(1) << info() << " issuing kill request";
 
     for (const auto& [name, runner] : m_ingress_runners)
     {
-        DVLOG(10) << info() << " issuing kill for ingress port " << name;
+        DVLOG(1) << info() << " issuing kill for ingress port " << name;
         runner->kill();
     }
 
     for (const auto& [name, runner] : m_runners)
     {
-        DVLOG(10) << info() << " issuing kill for node " << name;
+        DVLOG(1) << info() << " issuing kill for node " << name;
         runner->kill();
     }
 
     for (const auto& [name, runner] : m_egress_runners)
     {
-        DVLOG(10) << info() << " issuing kill for egress port " << name;
+        DVLOG(1) << info() << " issuing kill for egress port " << name;
         runner->kill();
     }
 
     change_stage(State::Kill);
-    DVLOG(10) << info() << " kill has been initiated; use the is_completed future to await on shutdown";
+    DVLOG(1) << info() << " kill has been initiated; use the is_completed future to await on shutdown";
 }
 
 void SegmentInstance::do_service_await_live()
@@ -352,10 +352,13 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
 
 void SegmentInstance::shutdown()
 {
+    DVLOG(1) << m_name << " - " << info() << " - shutting down segment - 0";
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
-    DVLOG(10) << m_name << " - " << info() << " - shutting down segment";
+    DVLOG(1) << m_name << " - " << info() << " - shutting down segment - 1";
     do_service_kill();
+    DVLOG(1) << m_name << " - " << info() << " - shutting down segment - 2";
     m_builder->shutdown();
+    DVLOG(1) << m_name << " - " << info() << " - shutting down segment - 3";
 }
 
 }  // namespace mrc::segment

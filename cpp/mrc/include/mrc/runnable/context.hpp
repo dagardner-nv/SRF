@@ -67,6 +67,7 @@ class Context
     static Context& get_runtime_context();
 
     void set_exception(std::exception_ptr exception_ptr);
+    bool has_exception() const;
 
   protected:
     void init(const Runner& runner);

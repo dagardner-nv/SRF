@@ -99,12 +99,14 @@ void PipelineInstance::join_segment(const SegmentAddress& address)
 
 void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
-    DVLOG(1) << "PipelineInstance::stop_segment " << ::mrc::segment::info(address);
+    DVLOG(1) << "PipelineInstance::stop_segment " << ::mrc::segment::info(address) << " - 0";
     auto search = find_segment(address);
 
     auto [id, rank]    = segment_address_decode(address);
     const auto& segdef = m_definition->find_segment(id);
+    search->second->shutdown();
     search->second->service_stop();
+    DVLOG(1) << "PipelineInstance::stop_segment " << ::mrc::segment::info(address) << " - 1";
 }
 
 void PipelineInstance::kill_segment(const SegmentAddress& address)
@@ -204,6 +206,7 @@ void PipelineInstance::do_service_await_live()
 
 void PipelineInstance::do_service_stop()
 {
+    DVLOG(1) << "PipelineInstance::do_service_stop";
     mark_joinable();
 
     for (auto& [id, segment] : m_segments)

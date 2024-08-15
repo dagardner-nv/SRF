@@ -34,22 +34,35 @@
 
 namespace mrc::system {
 
-Thread::Thread(std::shared_ptr<const ThreadResources> resources, std::thread&& thread) :
+Thread::Thread(std::shared_ptr<const ThreadResources> resources, std::jthread&& thread) :
   m_resources(std::move(resources)),
   m_thread(std::move(thread))
 {}
 
 Thread::~Thread()
 {
+    DVLOG(1) << "~Thread - 0";
     if (m_thread.joinable())
     {
-        DVLOG(10) << "[system::Thread]: joining tid=" << m_thread.get_id();
+        DVLOG(1) << "[system::Thread]: joining tid=" << m_thread.get_id() << " - 1";
+        if (m_thread.request_stop())
+        {
+            DVLOG(1) << "[system::Thread]: joining tid=" << m_thread.get_id() << " - stop requested";
+        }
+        else
+        {
+            DVLOG(1) << "[system::Thread]: joining tid=" << m_thread.get_id() << " - stop not requested";
+        }
+        DVLOG(1) << "[system::Thread]: joining tid=" << m_thread.get_id() << " - 1.5";
         m_thread.join();
+        DVLOG(1) << "~Thread - 2";
         m_resources.reset();
+        DVLOG(1) << "~Thread - 3";
     }
+    DVLOG(1) << "~Thread - 4";
 }
 
-const std::thread& Thread::thread() const
+const std::jthread& Thread::thread() const
 {
     return m_thread;
 }

@@ -77,6 +77,7 @@ Instance::~Instance()
 void Instance::do_service_start() {}
 void Instance::do_service_stop()
 {
+    DVLOG(1) << "client instance: " << m_instance_id << " stopping";
     service_kill();
 }
 void Instance::do_service_kill()

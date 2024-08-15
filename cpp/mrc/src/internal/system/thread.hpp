@@ -48,7 +48,7 @@ class Thread
 {
   public:
     ~Thread();
-    const std::thread& thread() const;
+    const std::jthread& thread() const;
 
     Thread(Thread&&) noexcept            = default;
     Thread& operator=(Thread&&) noexcept = default;
@@ -56,9 +56,9 @@ class Thread
     void join();
 
   private:
-    Thread(std::shared_ptr<const ThreadResources> resources, std::thread&& thread);
+    Thread(std::shared_ptr<const ThreadResources> resources, std::jthread&& thread);
     std::shared_ptr<const ThreadResources> m_resources;
-    std::thread m_thread;  // use std::jthread in c++20; require std::stop_token in task signature
+    std::jthread m_thread;  // use std::jthread in c++20; require std::stop_token in task signature
 
     friend ThreadResources;
 };
@@ -94,7 +94,7 @@ Thread ThreadResources::make_thread(std::string desc, CpuSet cpu_affinity, Calla
 {
     CHECK(cpu_affinity.weight());
     CHECK(system().topology().contains(cpu_affinity));
-    auto thread = std::thread([this, desc, cpu_affinity, thread_task = std::move(callable)]() mutable {
+    auto thread = std::jthread([this, desc, cpu_affinity, thread_task = std::move(callable)]() mutable {
         DVLOG(10) << "tid: " << std::this_thread::get_id() << "; initializing thread";
         initialize_thread(desc, cpu_affinity);
         DVLOG(10) << "tid: " << std::this_thread::get_id() << "; execute thread task";

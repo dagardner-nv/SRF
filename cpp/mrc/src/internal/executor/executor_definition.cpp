@@ -145,6 +145,7 @@ void ExecutorDefinition::do_service_start()
 
 void ExecutorDefinition::do_service_stop()
 {
+    DVLOG(1) << "ExecutorDefinition::do_service_stop";
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_stop();
 }

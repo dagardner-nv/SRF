@@ -114,6 +114,11 @@ void Context::finish()
     }
 }
 
+bool Context::has_exception() const
+{
+    return (m_exception_ptr != nullptr);
+}
+
 void Context::set_exception(std::exception_ptr exception_ptr)
 {
     try
