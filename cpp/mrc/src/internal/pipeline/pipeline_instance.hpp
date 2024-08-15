@@ -91,11 +91,8 @@ class PipelineInstance final : public Service, public PipelineResources
     bool m_joinable{false};
     Promise<void> m_joinable_promise;
     SharedFuture<void> m_joinable_future;
-<<<<<<< HEAD
     on_state_change_fn m_state_change_cb = nullptr;
-=======
     Mutex m_kill_mux;
->>>>>>> david-inconsistent-segments-and-edges-p2
 };
 
 }  // namespace mrc::pipeline
