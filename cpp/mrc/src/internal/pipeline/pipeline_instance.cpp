@@ -37,6 +37,7 @@
 
 #include <exception>
 #include <memory>
+#include <mutex>  // for lock_guard
 #include <ostream>
 #include <string>
 #include <utility>
@@ -77,35 +78,40 @@ void PipelineInstance::update()
     mark_joinable();
 }
 
-void PipelineInstance::remove_segment(const SegmentAddress& address)
+decltype(PipelineInstance::m_segments)::iterator PipelineInstance::find_segment(const SegmentAddress& address)
 {
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
+    return search;
+}
+
+void PipelineInstance::remove_segment(const SegmentAddress& address)
+{
+    auto search = find_segment(address);
     m_segments.erase(search);
 }
 
 void PipelineInstance::join_segment(const SegmentAddress& address)
 {
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
+    auto search = find_segment(address);
     search->second->service_await_join();
 }
 
 void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
     DVLOG(1) << "PipelineInstance::stop_segment " << ::mrc::segment::info(address);
-    auto search = m_segments.find(address);
-    CHECK(search != m_segments.end());
+    auto search = find_segment(address);
 
     auto [id, rank]    = segment_address_decode(address);
     const auto& segdef = m_definition->find_segment(id);
+    search->second->service_stop();
+}
 
-    for (const auto& name : segdef->ingress_port_names())
-    {
-        DVLOG(3) << "Dropping IngressPort for " << ::mrc::segment::info(address) << " on manifold " << name;
-        // manifold(name).drop_output(address);
-    }
-
+void PipelineInstance::kill_segment(const SegmentAddress& address)
+{
+    DVLOG(1) << "PipelineInstance::kill_segment " << ::mrc::segment::info(address);
+    auto search = find_segment(address);
+    search->second->shutdown();
     search->second->service_stop();
 }
 
@@ -114,6 +120,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
     // perform our allocations on the numa domain of the intended target
     // CHECK_LT(partition_id, m_resources->host_resources().size());
     CHECK_LT(partition_id, resources().partition_count());
+    DVLOG(10) << "Enqueing Creation of segment " << ::mrc::segment::info(address);
     resources()
         .partition(partition_id)
         .runnable()
@@ -124,6 +131,7 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
 
             auto [id, rank] = segment_address_decode(address);
             auto definition = m_definition->find_segment(id);
+            DVLOG(1) << "Creating segment " << definition->name() << " - " << ::mrc::segment::info(address);
             auto segment =
                 std::make_unique<segment::SegmentInstance>(definition, rank, *this, partition_id, m_state_change_cb);
 
@@ -139,6 +147,8 @@ void PipelineInstance::create_segment(const SegmentAddress& address, std::uint32
                 }
                 segment->attach_manifold(manifold);
             }
+
+            DVLOG(10) << "Created segment " << definition->name() << " - " << ::mrc::segment::info(address);
 
             for (const auto& name : definition->ingress_port_names())
             {
@@ -204,12 +214,26 @@ void PipelineInstance::do_service_stop()
 
 void PipelineInstance::do_service_kill()
 {
+    std::lock_guard<decltype(m_kill_mux)> guard(m_kill_mux);
+    DVLOG(10) << "pipeline::PipelineInstance - killing " << m_manifolds.size() << " manifolds - " << m_segments.size()
+              << " segments";
     mark_joinable();
+
+    for (const auto& [name, manifold] : m_manifolds)
+    {
+        DVLOG(10) << "pipeline::PipelineInstance - killing manifold " << name;
+        manifold->kill();
+    }
+
+    m_manifolds.clear();
+
     for (auto& [id, segment] : m_segments)
     {
-        stop_segment(id);
+        kill_segment(id);
         segment->service_kill();
     }
+
+    m_segments.clear();
 }
 
 void PipelineInstance::do_service_await_join()
@@ -233,6 +257,7 @@ void PipelineInstance::do_service_await_join()
     if (first_exception)
     {
         LOG(ERROR) << "pipeline::PipelineInstance - an exception was caught while awaiting on segments - rethrowing";
+        do_service_kill();
         std::rethrow_exception(std::move(first_exception));
     }
 }
