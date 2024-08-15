@@ -55,7 +55,9 @@ void Executor::stop()
 
 void Executor::join()
 {
+    DVLOG(1) << "Executor::join()";
     m_impl->join();
+    DVLOG(1) << "Executor::join() - done";
 }
 
 std::unique_ptr<pipeline::IExecutor> make_executor(std::shared_ptr<Options> options, on_state_change_fn state_change_cb)

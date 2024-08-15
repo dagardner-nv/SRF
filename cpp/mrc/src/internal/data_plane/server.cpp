@@ -238,6 +238,7 @@ void Server::do_service_kill()
 
 void Server::do_service_await_join()
 {
+    DVLOG(1) << "data_plane Server::do_service_await_join";
     m_progress_engine->await_join();
     if (m_prepost_channel)
     {

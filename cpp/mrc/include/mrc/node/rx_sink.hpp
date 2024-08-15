@@ -155,6 +155,7 @@ void RxSink<T, ContextT>::on_stop(const rxcpp::subscription& subscription)
 template <typename T, typename ContextT>
 void RxSink<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
+    DVLOG(1) << runnable::Context::get_runtime_context().info() << " RxSink on_kill unsubscribe";
     // this->disable_persistence();
     subscription.unsubscribe();
 }

@@ -251,12 +251,14 @@ void SegmentInstance::do_service_await_live()
 
 void SegmentInstance::do_service_await_join()
 {
+    DVLOG(1) << info() << "SegmentInstance::do_service_await_join";
     DVLOG(10) << info() << " join started";
     std::exception_ptr first_exception = nullptr;
 
     auto check = [&first_exception](mrc::runnable::Runner& runner) {
         try
         {
+            DVLOG(1) << "Calling runner.await_join()";
             runner.await_join();
         } catch (...)
         {
@@ -269,22 +271,22 @@ void SegmentInstance::do_service_await_join()
 
     for (const auto& [name, runner] : m_ingress_runners)
     {
-        DVLOG(10) << info() << " awaiting on ingress port join to " << name;
+        DVLOG(1) << info() << " awaiting on ingress port join to " << name;
         check(*runner);
     }
     for (const auto& [name, runner] : m_runners)
     {
-        DVLOG(10) << info() << " awaiting on join to " << name;
+        DVLOG(1) << info() << " awaiting on join to " << name;
         check(*runner);
     }
     for (const auto& [name, runner] : m_egress_runners)
     {
-        DVLOG(10) << info() << " awaiting on egress port join to " << name;
+        DVLOG(1) << info() << " awaiting on egress port join to " << name;
         check(*runner);
     }
 
     change_stage(State::Joined);
-    DVLOG(10) << info() << " join complete";
+    DVLOG(1) << info() << " join complete";
     if (first_exception)
     {
         LOG(ERROR) << "segment::SegmentInstance - an exception was caught while awaiting on one or more nodes - "
@@ -346,6 +348,14 @@ std::shared_ptr<manifold::Interface> SegmentInstance::create_manifold(const Port
     }
     LOG(FATAL) << info() << " unable to match ingress or egress port name";
     return nullptr;
+}
+
+void SegmentInstance::shutdown()
+{
+    std::lock_guard<decltype(m_mutex)> lock(m_mutex);
+    DVLOG(10) << m_name << " - " << info() << " - shutting down segment";
+    do_service_kill();
+    m_builder->shutdown();
 }
 
 }  // namespace mrc::segment

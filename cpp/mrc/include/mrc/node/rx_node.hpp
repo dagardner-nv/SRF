@@ -133,6 +133,7 @@ void RxNode<InputT, OutputT, ContextT>::on_stop(const rxcpp::subscription& subsc
 template <typename InputT, typename OutputT, typename ContextT>
 void RxNode<InputT, OutputT, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
+    DVLOG(1) << runnable::Context::get_runtime_context().info() << " RXNode on_kill unsubscribe";
     // this->disable_persistence();
     subscription.unsubscribe();
 }

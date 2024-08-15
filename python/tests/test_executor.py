@@ -122,7 +122,7 @@ def node_exception():
             print("Received value: {}".format(data), flush=True)
             raise RuntimeError("unittest")
 
-        return builder.make_node("node", mrc.core.operators.map(on_next))
+        return builder.make_node("error_raising_node", mrc.core.operators.map(on_next))
 
     return build
 
@@ -278,12 +278,14 @@ def test_pyexception_in_node(source: node_fn_type,
         if state in (mrc.State.Stop, mrc.State.Kill):
             print("Calling stop", flush=True)
             executor.stop()
+            print("Calling stop - done", flush=True)
 
     executor = build_executor(pipe, state_change_cb)
 
     state_change_cb_called = False
 
     with pytest.raises(RuntimeError):
+        print("Calling join", flush=True)
         executor.join()
 
     assert state_change_cb_called

@@ -101,6 +101,7 @@ void RxSource<T, ContextT>::on_stop(const rxcpp::subscription& subscription)
 template <typename T, typename ContextT>
 void RxSource<T, ContextT>::on_kill(const rxcpp::subscription& subscription)
 {
+    DVLOG(1) << runnable::Context::get_runtime_context().info() << " RxSource on_kill unsubscribe";
     subscription.unsubscribe();
 }
 

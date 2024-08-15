@@ -189,6 +189,7 @@ void Server::do_service_kill()
 
 void Server::do_service_await_join()
 {
+    DVLOG(1) << "Server::do_service_await_join()";
     // clear all instances which drops their held stream writers
     DVLOG(10) << "awaiting all streams";
     drop_all_streams();

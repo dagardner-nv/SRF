@@ -25,6 +25,7 @@
 
 #include <exception>
 #include <functional>  // for function
+#include <memory>
 #include <mutex>
 #include <sstream>  // for operator<<, basic_ostream
 #include <utility>
@@ -183,6 +184,9 @@ void Service::service_kill()
 
 void Service::service_await_join()
 {
+    // set later when we have a lock on the mutex
+    bool call_join                                   = false;
+    std::unique_ptr<Promise<void>> completed_promise = nullptr;
     {
         std::unique_lock<decltype(m_mutex)> lock(m_mutex);
 
@@ -197,37 +201,48 @@ void Service::service_await_join()
         {
             // Prevent reentry
             m_service_await_join_called = true;
+            call_join                   = true;
 
             // We now create a promise and a future to track the completion of the service
-            Promise<void> completed_promise;
+            completed_promise = std::make_unique<Promise<void>>();
 
-            m_completed_future = completed_promise.get_future();
-
-            // Unlock the mutex before calling await join to avoid a deadlock
-            lock.unlock();
-
-            try
-            {
-                Unwinder ensure_completed_set([this]() {
-                    // Always set the state to completed before releasing the future
-                    this->advance_state(ServiceState::Completed);
-                });
-
-                // Now call the await join (this can throw!)
-                this->do_service_await_join();
-
-                // Set the value only if there was not an exception
-                completed_promise.set_value();
-
-            } catch (const std::exception& ex)
-            {
-                LOG(ERROR) << this->debug_prefix() << " caught exception in service_await_join: " << ex.what();
-                // Join must have thrown, set the exception in the promise (it will be retrieved later)
-                completed_promise.set_exception(std::current_exception());
-            }
+            m_completed_future = completed_promise->get_future();
         }
     }
 
+    if (call_join)
+    {
+        try
+        {
+            DCHECK(completed_promise != nullptr);
+            DVLOG(1) << this->debug_prefix() << " service_await_join - 0";
+            Unwinder ensure_completed_set([this]() {
+                // Always set the state to completed before releasing the future
+                DVLOG(1) << this->debug_prefix() << " unwinder setting state to completed";
+                this->advance_state(ServiceState::Completed);
+                DVLOG(1) << this->debug_prefix() << " unwinder setting state to completed - done";
+            });
+
+            DVLOG(1) << this->debug_prefix() << " service_await_join  - 1";
+            // Now call the await join (this can throw!)
+            this->do_service_await_join();
+
+            DVLOG(1) << this->debug_prefix() << " service_await_join  - 2";
+
+            // Set the value only if there was not an exception
+            completed_promise->set_value();
+
+            DVLOG(1) << this->debug_prefix() << " service_await_join  - 3";
+
+        } catch (const std::exception& ex)
+        {
+            LOG(ERROR) << this->debug_prefix() << " caught exception in service_await_join: " << ex.what();
+            // Join must have thrown, set the exception in the promise (it will be retrieved later)
+            completed_promise->set_exception(std::current_exception());
+        }
+    }
+
+    DVLOG(1) << this->debug_prefix() << " service_await_join future.get  - 3";
     // Wait for the completed future to be returned. This will rethrow any exception thrown in do_service_await_join
     m_completed_future.get();
 }

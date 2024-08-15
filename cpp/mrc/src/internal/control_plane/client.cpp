@@ -38,6 +38,7 @@
 #include "mrc/types.hpp"
 
 #include <boost/fiber/future/promise.hpp>  // for promise
+#include <glog/logging.h>
 #include <google/protobuf/any.pb.h>
 #include <grpcpp/grpcpp.h>
 #include <rxcpp/rx.hpp>
@@ -160,6 +161,7 @@ void Client::do_service_await_live()
 
 void Client::do_service_await_join()
 {
+    DVLOG(1) << "Client::do_service_await_join()";
     auto status = m_stream->await_fini();
     m_event_handler->await_join();
     m_connections_update_channel.reset();

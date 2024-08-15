@@ -112,6 +112,7 @@ void SubscriptionService::do_service_await_live() {}
 //
 void SubscriptionService::do_service_await_join()
 {
+    DVLOG(1) << "SubscriptionService::do_service_await_join()";
     do_subscription_service_join();
 }
 

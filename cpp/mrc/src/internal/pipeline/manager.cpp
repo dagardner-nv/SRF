@@ -113,6 +113,7 @@ void Manager::do_service_kill()
 
 void Manager::do_service_await_join()
 {
+    DVLOG(1) << "Manager::do_service_await_join";
     std::exception_ptr ptr;
     try
     {

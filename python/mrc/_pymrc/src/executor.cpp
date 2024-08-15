@@ -285,11 +285,15 @@ void Executor::join()
         py::gil_scoped_release nogil;
 
         // Wait without the GIL
+        DVLOG(1) << "PyMRC Executor - Waiting for join future";
         m_join_future.wait();
+        DVLOG(1) << "PyMRC Executor - Waiting for join future - done";
     }
 
     // Call get() with the GIL to rethrow any exceptions
+    DVLOG(1) << "PyMRC Executor - Waiting for get future";
     m_join_future.get();
+    DVLOG(1) << "PyMRC Executor - Waiting for get future - done";
 }
 
 std::shared_ptr<Awaitable> Executor::join_async()

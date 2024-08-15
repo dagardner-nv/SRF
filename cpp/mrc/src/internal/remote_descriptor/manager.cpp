@@ -249,6 +249,7 @@ void Manager::do_service_await_live()
 
 void Manager::do_service_await_join()
 {
+    DVLOG(1) << "RD Manager::do_service_await_join";
     CHECK(m_decrement_handler);
     m_decrement_handler->await_join();
 }

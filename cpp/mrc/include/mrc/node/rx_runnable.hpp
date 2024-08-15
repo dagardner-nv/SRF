@@ -22,6 +22,8 @@
 #include "mrc/node/rx_subscribable.hpp"
 #include "mrc/runnable/runnable.hpp"
 
+#include <glog/logging.h>
+
 namespace mrc::node {
 
 template <typename ContextT>
@@ -91,6 +93,7 @@ void RxRunnable<ContextT>::shutdown(ContextT& ctx)
 template <typename ContextT>
 void RxRunnable<ContextT>::on_state_update(const state_t& state)
 {
+    DVLOG(1) << "RxRunnable::on_state_update: " << static_cast<int>(state);
     switch (state)
     {
     case state_t::Stop:

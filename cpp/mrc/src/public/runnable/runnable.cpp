@@ -19,6 +19,8 @@
 
 #include "mrc/runnable/context.hpp"
 
+#include <glog/logging.h>
+
 #include <atomic>
 #include <string>
 #include <typeinfo>
@@ -60,6 +62,7 @@ std::string Runnable::info(const Context& ctx) const
 
 void Runnable::update_state(State new_state)
 {
+    DVLOG(1) << "Runnable state update: " << static_cast<int>(new_state);
     if (m_state < new_state)
     {
         m_state = new_state;

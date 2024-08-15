@@ -169,12 +169,19 @@ void Runner::await_live() const
 
 void Runner::await_join() const
 {
+    DVLOG(1) << "Runner::await_join - 0 ";
     std::exception_ptr first_exception{nullptr};
+    std::size_t instance_num = 0;
     for (const auto& instance : instances())
     {
         try
         {
+            DVLOG(1) << "Runner::await_join - 1 instance[" << instance_num
+                     << "] state: " << runnable_state_str(instance.m_state);
+            instance_num++;
             instance.join_future().get();
+            DVLOG(1) << "Runner::await_join - 2 instance[" << instance_num - 1
+                     << "] state: " << runnable_state_str(instance.m_state);
         } catch (...)
         {
             if (first_exception == nullptr)
@@ -183,6 +190,7 @@ void Runner::await_join() const
             }
         }
     }
+    DVLOG(1) << "Runner::await_join - 3";
     m_instances.clear();
     if (first_exception)
     {
@@ -190,6 +198,8 @@ void Runner::await_join() const
                       "rethrowing";
         std::rethrow_exception(std::move(first_exception));
     }
+
+    DVLOG(1) << "Runner::await_join - 4";
 }
 
 void Runner::stop() const
@@ -206,6 +216,8 @@ void Runner::kill() const
 
 void Runner::update_state(std::size_t launcher_id, State new_state)
 {
+    DVLOG(1) << "Runner::update_state - 0 - launcher_id: " << launcher_id
+             << "; new_state: " << runnable_state_str(new_state);
     std::lock_guard<decltype(m_mutex)> lock(m_mutex);
     CHECK(m_runnable);
     CHECK_LT(launcher_id, m_instances.size());
@@ -214,10 +226,14 @@ void Runner::update_state(std::size_t launcher_id, State new_state)
                              << runnable_state_str(state) << "; target state: " << runnable_state_str(new_state);
     auto old_state = state;
     state          = new_state;
+    DVLOG(1) << "Runner::update_state - 1 - launcher_id: " << launcher_id;
     if (m_on_instance_state_change)
     {
+        DVLOG(1) << "Runner::update_state - 1.1 - launcher_id: " << launcher_id;
         m_on_instance_state_change(*m_runnable, launcher_id, old_state, new_state);
+        DVLOG(1) << "Runner::update_state - 1.2 - launcher_id: " << launcher_id;
     }
+    DVLOG(1) << "Runner::update_state - 2- launcher_id: " << launcher_id;
 }
 
 std::size_t Runner::Instance::uid() const

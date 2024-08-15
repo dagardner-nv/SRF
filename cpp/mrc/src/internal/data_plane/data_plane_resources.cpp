@@ -98,6 +98,7 @@ void DataPlaneResources::do_service_kill()
 
 void DataPlaneResources::do_service_await_join()
 {
+    DVLOG(1) << "DataPlaneResources::do_service_await_join()";
     m_client->service_await_join();
     m_server->service_stop();
     m_server->service_await_join();

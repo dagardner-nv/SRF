@@ -77,6 +77,7 @@ void Server::do_service_await_live()
 
 void Server::do_service_await_join()
 {
+    DVLOG(1) << "GRPC Server::do_service_await_join";
     if (m_progress_engine)
     {
         m_progress_engine->await_join();

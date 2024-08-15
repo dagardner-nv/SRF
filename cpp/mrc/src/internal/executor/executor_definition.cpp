@@ -125,7 +125,9 @@ void ExecutorDefinition::stop()
 
 void ExecutorDefinition::join()
 {
+    DVLOG(1) << "ExecutorDefinition::join()";
     this->service_await_join();
+    DVLOG(1) << "ExecutorDefinition::join() - done";
 }
 
 void ExecutorDefinition::do_service_start()
@@ -158,6 +160,7 @@ void ExecutorDefinition::do_service_await_live()
 }
 void ExecutorDefinition::do_service_await_join()
 {
+    DVLOG(1) << "ExecutorDefinition::do_service_await_join";
     CHECK(m_pipeline_manager);
     m_pipeline_manager->service_await_join();
 }

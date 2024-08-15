@@ -329,6 +329,7 @@ void Client::do_service_kill()
 
 void Client::do_service_await_join()
 {
+    DVLOG(1) << "DP Client::do_service_await_join()";
     m_rd_writer->await_join();
 }
 

@@ -93,6 +93,7 @@ void PipelineInstance::join_segment(const SegmentAddress& address)
 
 void PipelineInstance::stop_segment(const SegmentAddress& address)
 {
+    DVLOG(1) << "PipelineInstance::stop_segment " << ::mrc::segment::info(address);
     auto search = m_segments.find(address);
     CHECK(search != m_segments.end());
 
@@ -213,6 +214,7 @@ void PipelineInstance::do_service_kill()
 
 void PipelineInstance::do_service_await_join()
 {
+    DVLOG(1) << "PipelineInstance::do_service_await_join";
     std::exception_ptr first_exception = nullptr;
     m_joinable_future.get();
     for (const auto& [address, segment] : m_segments)
