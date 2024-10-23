@@ -121,7 +121,7 @@ include(GNUInstallDirs)
 install(
   TARGETS pymrc
   DESTINATION ${lib_dir}
-  EXPORT ${PROJECT_NAME}-exports
+  EXPORT ${PROJECT_NAME}-python-exports
   COMPONENT Python
   FILE_SET public_headers
 )
