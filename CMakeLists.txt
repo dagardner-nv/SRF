@@ -44,7 +44,7 @@ mark_as_advanced(MRC_CACHE_DIR)
 
 enable_testing()
 
-if (MRC_USE_IWYU AND MRC_USE_CCACHE)
+if(MRC_USE_IWYU AND MRC_USE_CCACHE)
   message(FATAL_ERROR "MRC_USE_IWYU and MRC_USE_CCACHE cannot be set simultaneously")
 endif()
 
@@ -53,11 +53,11 @@ set(MRC_CMAKE_MODULE_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
     "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake"
     "${CMAKE_CURRENT_SOURCE_DIR}/external/utilities/cmake/morpheus_utils/package_search"
-    )
+)
 
 set(MRC_CMAKE_PREFIX_PATH_EXTENSIONS
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
-    )
+)
 
 # Prepend path and prefix updates so they take priority in this scope.
 list(PREPEND CMAKE_MODULE_PATH "${MRC_CMAKE_MODULE_PATH_EXTENSIONS}")
@@ -72,7 +72,7 @@ include(morpheus_utils/load)
 morpheus_utils_initialize_package_manager(
     MRC_USE_CONDA
     BUILD_SHARED_LIBS
-    )
+)
 
 # Configure CUDA architecture
 # NOTE: This MUST occur before any 'project' calls because of rapids_cmake requirements.
@@ -111,7 +111,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   if(${clang_version} VERSION_LESS_EQUAL "15")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts")
   endif()
-
 endif()
 
 # Now enable CUDA
@@ -167,7 +166,6 @@ include(environment/init_iwyu)
 
 # ##################################################################################################
 # - subdirectories ---------------------------------------------------------------------------------
-
 add_subdirectory(cpp)
 
 if(MRC_BUILD_PYTHON)
@@ -180,7 +178,6 @@ endif()
 
 # ##################################################################################################
 # - install export ---------------------------------------------------------------------------------
-
 set(doc_string
   [=[
 Provide targets for mrc.
@@ -195,7 +192,7 @@ set(rapids_project_version_compat SameMinorVersion)
 rapids_export(INSTALL ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-exports
   GLOBAL_TARGETS libmrc pymrc
-  COMPONENTS python
+  COMPONENTS Python
   COMPONENTS_EXPORT_SET ${PROJECT_NAME}-python-exports
   VERSION ${PROJECT_VERSION}
   NAMESPACE mrc::
@@ -208,7 +205,7 @@ rapids_export(INSTALL ${PROJECT_NAME}
 rapids_export(BUILD ${PROJECT_NAME}
   EXPORT_SET ${PROJECT_NAME}-exports
   GLOBAL_TARGETS libmrc pymrc
-  COMPONENTS python
+  COMPONENTS Python
   COMPONENTS_EXPORT_SET ${PROJECT_NAME}-python-exports
   VERSION ${PROJECT_VERSION}
   LANGUAGES C CXX CUDA
@@ -219,13 +216,13 @@ rapids_export(BUILD ${PROJECT_NAME}
 
 # ##################################################################################################
 # - debug info -------------------------------------------------------------------------------------
-if (MRC_ENABLE_DEBUG_INFO)
+if(MRC_ENABLE_DEBUG_INFO)
   morpheus_utils_print_all_targets()
 
   morpheus_utils_print_target_properties(
       TARGETS
-        libmrc
-        pymrc
+    libmrc
+    pymrc
       WRITE_TO_FILE
   )
 
